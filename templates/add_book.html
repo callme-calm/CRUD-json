@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Book</title>
+</head>
+<body>
+    <h1>Create a New Book</h1>
+    <form id="bookForm">
+        <label for="book_id">id:</label>
+        <input type="text" id="book_id" name="book_id" required><br><br>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description" required><br><br>
+        <button type="submit">Add Book</button>
+    </form>
+
+    <script>
+        document.getElementById('bookForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const newBook = {
+                id: document.getElementById('book_id').value,
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value
+            };
+
+            fetch('http://127.0.0.1:5000/books/add', {
+<!--                mode: 'no-cors',-->
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'charset': 'utf-8'
+
+                },
+                body: JSON.stringify(newBook)
+            })
+
+        });
+    </script>
+</body>
+</html>

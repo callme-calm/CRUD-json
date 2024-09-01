@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block navbar %}
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">Welcome to our Bookshop</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+{% block content %}
+    {% for book in books %}
+                <div>
+                     <button onclick="location.href='{{ url_for('create_book') }}'">Add book</button>
+                </div>
+                <article>
+                    <div >
+                        <h2>{{ book.description }}</h2>
+                        <p>{{ book.name }}</p>
+                            <div >
+                                <form action="{{ url_for('update_book', book_id=book.id ) }}" method="GET" style="display:inline;">
+                                    <input type="submit" value="update" >
+                                </form>
+                                <form action="{{ url_for('delete_book', id=book.id) }}" method="POST" style="display:inline;">
+                                    <input type="submit" value="Delete" >
+                                </form>
+                            </div>
+                    </div>
+                </article>
+                <hr>
+            {% endfor %}
+{% endblock %}
