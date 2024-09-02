@@ -38,23 +38,23 @@ def auth_response():
     result = auth.complete_log_in(request.args)
     if "error" in result:
         return render_template("auth_error.html", result=result)
-    return redirect(url_for("index"))
+    return redirect(url_for("index1"))
 
 
 @app.route("/logout")
 def logout():
-    return redirect(auth.log_out(url_for("index", _external=True)))
+    return redirect(auth.log_out(url_for("index1", _external=True)))
 
 
 @app.route("/")
-def index():
+def index1():
     if not (app.config["CLIENT_ID"] and app.config["CLIENT_SECRET"]):
         # This check is not strictly necessary.
         # You can remove this check from your production code.
         return render_template('config_error.html')
     if not auth.get_user():
         return redirect(url_for("login"))
-    return render_template('index.html', user=auth.get_user())
+    return render_template('index1.html', user=auth.get_user())
 
 
 @app.route("/call_downstream_api")
@@ -76,6 +76,10 @@ with open("static/json_data.json",'r') as f:
 
 @app.route('/books', methods=['GET'])
 def get_book():
+    token = auth.get_token_for_user(app_config.SCOPE)
+    if "error" in token:
+        return redirect(url_for("login"))
+
     with open("static/json_data.json", 'r') as f:
         latest_books = json.load(f)
     return render_template('index1.html',books=latest_books)
@@ -83,6 +87,10 @@ def get_book():
 
 @app.route('/books/add', methods=['GET','POST'])
 def create_book():
+    token = auth.get_token_for_user(app_config.SCOPE)
+    if "error" in token:
+        return redirect(url_for("login"))
+
     if request.method == 'GET':
         return render_template("add_book.html")
     # return json.dumps(books)
@@ -98,6 +106,9 @@ def create_book():
 
 @app.route('/books/<book_id>/update', methods=['GET','PATCH'])
 def update_book(book_id):
+    token = auth.get_token_for_user(app_config.SCOPE)
+    if "error" in token:
+        return redirect(url_for("login"))
     global books
     with open("static/json_data.json", 'r') as f:
         books = json.load(f)
@@ -118,6 +129,10 @@ def update_book(book_id):
 
 @app.route('/books/<id>/delete', methods=['POST'])
 def delete_book(id):
+    token = auth.get_token_for_user(app_config.SCOPE)
+    if "error" in token:
+        return redirect(url_for("login"))
+
     # return f"{id},{books[0]['id'],id==int(books[0]['id'])},{type(id)} , {type(books[0]['id'])}"
     new_books = []
     for book in books:
