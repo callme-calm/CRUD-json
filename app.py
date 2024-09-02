@@ -3,7 +3,8 @@ import identity.web
 import requests
 from flask import Flask, redirect, render_template, request, session, url_for
 from flask_session import Session
-
+import json
+from functools import wraps
 import app_config
 
 app = Flask(__name__)
@@ -24,6 +25,15 @@ auth = identity.web.Auth(
     client_credential=app.config["CLIENT_SECRET"],
 )
 
+
+def vaild_token_required(f):
+    @wraps(f)
+    def checK_user_token(*args, **kwargs):
+        token = auth.get_token_for_user(app_config.SCOPE)
+        if "error" in token:
+            return redirect(url_for("login"))
+        return f(token, *args, **kwargs)
+    return checK_user_token
 
 @app.route("/login")
 def login():
@@ -56,29 +66,12 @@ def index1():
         return redirect(url_for("login"))
     return render_template('index1.html', user=auth.get_user())
 
-
-@app.route("/call_downstream_api")
-def call_downstream_api():
-    token = auth.get_token_for_user(app_config.SCOPE)
-    if "error" in token:
-        return redirect(url_for("login"))
-    # Use access token to call downstream api
-    api_result = requests.get(
-        app_config.ENDPOINT,
-        headers={'Authorization': 'Bearer ' + token['access_token']},
-        timeout=30,
-    ).json()
-    return render_template('display.html', result=api_result)
-import json
-
 with open("static/json_data.json",'r') as f:
     books=json.load(f)
 
 @app.route('/books', methods=['GET'])
+@vaild_token_required
 def get_book():
-    token = auth.get_token_for_user(app_config.SCOPE)
-    if "error" in token:
-        return redirect(url_for("login"))
 
     with open("static/json_data.json", 'r') as f:
         latest_books = json.load(f)
@@ -86,11 +79,8 @@ def get_book():
     # return json.dumps(books)
 
 @app.route('/books/add', methods=['GET','POST'])
+@vaild_token_required
 def create_book():
-    token = auth.get_token_for_user(app_config.SCOPE)
-    if "error" in token:
-        return redirect(url_for("login"))
-
     if request.method == 'GET':
         return render_template("add_book.html")
     # return json.dumps(books)
@@ -105,10 +95,8 @@ def create_book():
     return json.dumps(new_book), 201
 
 @app.route('/books/<book_id>/update', methods=['GET','PATCH'])
+@vaild_token_required
 def update_book(book_id):
-    token = auth.get_token_for_user(app_config.SCOPE)
-    if "error" in token:
-        return redirect(url_for("login"))
     global books
     with open("static/json_data.json", 'r') as f:
         books = json.load(f)
@@ -128,11 +116,8 @@ def update_book(book_id):
     # return "error", 404
 
 @app.route('/books/<id>/delete', methods=['POST'])
+@vaild_token_required
 def delete_book(id):
-    token = auth.get_token_for_user(app_config.SCOPE)
-    if "error" in token:
-        return redirect(url_for("login"))
-
     # return f"{id},{books[0]['id'],id==int(books[0]['id'])},{type(id)} , {type(books[0]['id'])}"
     new_books = []
     for book in books:
